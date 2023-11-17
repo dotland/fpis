@@ -12,7 +12,7 @@ object MyProgram:
     val msg = "The absolute value of %d is %d"
     msg.format(x, abs(x))
 
-  @main def printAbs: Unit =
+  @main def printAbs(): Unit =
     println(formatAbs(-42))
 
   // A definition of factorial, using a local, tail recursive function
@@ -49,7 +49,7 @@ object MyProgram:
 
   // We can generalize `formatAbs` and `formatFactorial` to
   // accept a _function_ as a parameter
-  def formatResult(name: String, n: Int, f: Int => Int) =
+  def formatResult(name: String, n: Int, f: Int => Int): String =
     val msg = "The %s of %d is %d."
     msg.format(name, n, f(n))
 
@@ -59,7 +59,7 @@ object FormatAbsAndFactorial:
 
   // Now we can use our general `formatResult` function
   // with both `abs` and `factorial`
-  @main def printAbsAndFactorial: Unit =
+  @main def printAbsAndFactorial(): Unit =
     println(formatResult("absolute value", -42, abs))
     println(formatResult("factorial", 7, factorial))
 
@@ -68,7 +68,7 @@ object TestFib:
   import MyProgram.*
 
   // test implementation of `fib`
-  @main def printFib: Unit =
+  @main def printFib(): Unit =
     println("Expected: 0, 1, 1, 2, 3, 5, 8")
     println("Actual:   %d, %d, %d, %d, %d, %d, %d".format(fib(0), fib(1), fib(2), fib(3), fib(4), fib(5), fib(6)))
 
@@ -80,7 +80,7 @@ object AnonymousFunctions:
   import MyProgram.*
 
   // Some examples of anonymous functions:
-  @main def printAnonymousFunctions: Unit =
+  @main def printAnonymousFunctions(): Unit =
     println(formatResult("absolute value", -42, abs))
     println(formatResult("factorial", 7, factorial))
     println(formatResult("increment", 7, (x: Int) => x + 1))
@@ -128,7 +128,15 @@ object PolymorphicFunctions:
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A, A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A, A) => Boolean): Boolean =
+    @annotation.tailrec
+    def go(i: Int): Boolean =
+      val n = i + 1
+      if as.sizeCompare(n) <= 0 then true
+      else if gt(as(i), as(n)) then false
+      else go(n)
+
+    go(0)
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
