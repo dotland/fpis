@@ -1,5 +1,7 @@
 package fpinscala.exercises.datastructures
 
+import scala.annotation.tailrec
+
 /** `List` data type, parameterized on a type, `A`. */
 enum List[+A]:
   /** A `List` data constructor representing the empty list. */
@@ -55,9 +57,23 @@ object List: // `List` companion object. Contains functions for creating and wor
     case Nil => throw new IllegalStateException("empty list")
     case Cons(r, t) => Cons(h, t)
 
-  def drop[A](l: List[A], n: Int): List[A] = ???
+  def drop[A](l: List[A], n: Int): List[A] =
+    @tailrec
+    def go(cur: List[A], n: Int): List[A] =
+      if n <= 0 then cur
+      else cur match
+        case Nil => Nil
+        case Cons(_, t) => go(t, n - 1)
+        
+    go(l, n)
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = ???
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] =
+    @tailrec
+    def go(cur: List[A]): List[A] = cur match
+      case Nil => Nil
+      case Cons(h, t) => if f(h) then go(t) else cur
+
+    go(l)
 
   def init[A](l: List[A]): List[A] = ???
 
