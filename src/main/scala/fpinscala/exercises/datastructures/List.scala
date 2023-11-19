@@ -75,7 +75,19 @@ object List: // `List` companion object. Contains functions for creating and wor
 
     go(l)
 
-  def init[A](l: List[A]): List[A] = ???
+  def init[A](l: List[A]): List[A] =
+    @tailrec
+    def loop(cur: List[A], rev: List[A]): List[A] = cur match
+      case Nil => rev
+      case Cons(h, t) => loop(t, Cons(h, rev))
+      
+    @tailrec
+    def go(cur: List[A], rev: List[A]): List[A] = cur match
+      case Nil => throw new IllegalStateException("empty list")
+      case Cons(_, Nil) => loop(rev, Nil)
+      case Cons(h, t) => go(t, Cons(h, rev))
+      
+    go(l, Nil)
 
   def length[A](l: List[A]): Int = ???
 
