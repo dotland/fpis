@@ -29,8 +29,11 @@ object List: // `List` companion object. Contains functions for creating and wor
   def experiment(): Unit =
     // EXERCISE 3.8
     val ls = List(1, 2, 3)
-    val res = foldRight(ls, Nil: List[Int], Cons(_, _))
-    assert(res == ls)
+    val res1 = foldRight(ls, Nil: List[Int], Cons(_, _))
+    assert(res1 == ls)
+    
+    val res2 = foldRightViaLeft(ls, Nil: List[Int], Cons(_, _))
+    assert(res2 == ls)
 
   @annotation.nowarn // Scala gives a hint here via a warning, so let's disable that
   val result = List(1,2,3,4,5) match
@@ -49,6 +52,10 @@ object List: // `List` companion object. Contains functions for creating and wor
     as match
       case Nil => acc
       case Cons(x, xs) => f(x, foldRight(xs, acc, f))
+      
+  // EXERCISE 3.13 HARD
+  def foldRightViaLeft[A, B](as: List[A], acc: B, f: (A, B) => B): B =
+    foldLeft(reverse(as), acc, (a, b) => f(b, a))
 
   def sumViaFoldRight(ns: List[Int]): Int =
     foldRight(ns, 0, (x,y) => x + y)
