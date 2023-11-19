@@ -123,11 +123,12 @@ object List: // `List` companion object. Contains functions for creating and wor
   def reverse[A](l: List[A]): List[A] =
     foldLeft(l, Nil: List[A], (r, a) => Cons(a, r))
 
-  // stack safe to use foldRightViaLeft
+  // Note: stack safe to use foldRightViaLeft
   def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
     foldRight(l, r, Cons(_, _))
 
-  def concat[A](l: List[List[A]]): List[A] = ???
+  def concat[A](l: List[List[A]]): List[A] =
+    foldLeft(l, Nil: List[A], append(_, _))
 
   def incrementEach(l: List[Int]): List[Int] = ???
 
