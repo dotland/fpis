@@ -104,11 +104,14 @@ object List: // `List` companion object. Contains functions for creating and wor
     case Nil => acc
     case Cons(h, t) => foldLeft(t, f(acc, h), f)
   
-  def sumViaFoldLeft(ns: List[Int]): Int = ???
+  def sumViaFoldLeft(ns: List[Int]): Int =
+    foldLeft(ns, 0, _ + _)
 
-  def productViaFoldLeft(ns: List[Double]): Double = ???
+  def productViaFoldLeft(ns: List[Double]): Double =
+    foldLeft(ns, 1.0, _ * _)
 
-  def lengthViaFoldLeft[A](l: List[A]): Int = ???
+  def lengthViaFoldLeft[A](l: List[A]): Int =
+    foldLeft(l, 0, (r, _) => r + 1)
 
   def reverse[A](l: List[A]): List[A] = ???
 
