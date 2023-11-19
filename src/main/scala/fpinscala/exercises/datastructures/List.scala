@@ -31,7 +31,7 @@ object List: // `List` companion object. Contains functions for creating and wor
     val ls = List(1, 2, 3)
     val res1 = foldRight(ls, Nil: List[Int], Cons(_, _))
     assert(res1 == ls)
-    
+
     val res2 = foldRightViaLeft(ls, Nil: List[Int], Cons(_, _))
     assert(res2 == ls)
 
@@ -52,7 +52,7 @@ object List: // `List` companion object. Contains functions for creating and wor
     as match
       case Nil => acc
       case Cons(x, xs) => f(x, foldRight(xs, acc, f))
-      
+
   // EXERCISE 3.13 HARD
   def foldRightViaLeft[A, B](as: List[A], acc: B, f: (A, B) => B): B =
     foldLeft(reverse(as), acc, (a, b) => f(b, a))
@@ -110,7 +110,7 @@ object List: // `List` companion object. Contains functions for creating and wor
   def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = l match
     case Nil => acc
     case Cons(h, t) => foldLeft(t, f(acc, h), f)
-  
+
   def sumViaFoldLeft(ns: List[Int]): Int =
     foldLeft(ns, 0, _ + _)
 
@@ -123,7 +123,9 @@ object List: // `List` companion object. Contains functions for creating and wor
   def reverse[A](l: List[A]): List[A] =
     foldLeft(l, Nil: List[A], (r, a) => Cons(a, r))
 
-  def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] = ???
+  // stack safe to use foldRightViaLeft
+  def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
+    foldRight(l, r, Cons(_, _))
 
   def concat[A](l: List[List[A]]): List[A] = ???
 
