@@ -1,6 +1,6 @@
 package fpinscala.exercises.datastructures
 
-import scala.annotation.tailrec
+import scala.annotation.{newMain, tailrec}
 
 /** `List` data type, parameterized on a type, `A`. */
 enum List[+A]:
@@ -24,6 +24,13 @@ object List: // `List` companion object. Contains functions for creating and wor
   def apply[A](as: A*): List[A] = // Variadic function syntax
     if as.isEmpty then Nil
     else Cons(as.head, apply(as.tail*))
+
+  @main
+  def experiment(): Unit =
+    // EXERCISE 3.8
+    val ls = List(1, 2, 3)
+    val res = foldRight(ls, Nil: List[Int], Cons(_, _))
+    assert(res == ls)
 
   @annotation.nowarn // Scala gives a hint here via a warning, so let's disable that
   val result = List(1,2,3,4,5) match
@@ -55,7 +62,7 @@ object List: // `List` companion object. Contains functions for creating and wor
 
   def setHead[A](l: List[A], h: A): List[A] = l match
     case Nil => throw new IllegalStateException("empty list")
-    case Cons(r, t) => Cons(h, t)
+    case Cons(_, t) => Cons(h, t)
 
   def drop[A](l: List[A], n: Int): List[A] =
     @tailrec
@@ -89,10 +96,14 @@ object List: // `List` companion object. Contains functions for creating and wor
       
     go(l, Nil)
 
-  def length[A](l: List[A]): Int = ???
+  def length[A](l: List[A]): Int =
+    foldRight(l, 0, (_, r) => 1 + r)
 
-  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = ???
-
+  @tailrec
+  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = l match
+    case Nil => acc
+    case Cons(h, t) => foldLeft(t, f(acc, h), f)
+  
   def sumViaFoldLeft(ns: List[Int]): Int = ???
 
   def productViaFoldLeft(ns: List[Double]): Double = ???
