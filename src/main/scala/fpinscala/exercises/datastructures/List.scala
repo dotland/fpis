@@ -165,6 +165,11 @@ object List: // `List` companion object. Contains functions for creating and wor
         case _ => (r, List[Int]())
     })._1)
 
-  // def zipWith - TODO determine signature
+  def zipWith[A, B, C](as: List[A], bs: List[B], f: (A, B) => C): List[C] =
+    reverse(foldLeft(as, (List[C](), bs), {
+      case ((r, bt), a) => bt match
+        case Cons(bh, btt) => (Cons(f(a, bh), r), btt)
+        case _ => (r, List[B]())
+    })._1)
 
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
