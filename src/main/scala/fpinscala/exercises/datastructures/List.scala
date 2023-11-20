@@ -158,7 +158,12 @@ object List: // `List` companion object. Contains functions for creating and wor
   def filterViaFlatMap[A](as: List[A], f: A => Boolean): List[A] =
     flatMap(as, a => if f(a) then List(a) else List[A]())
 
-  def addPairwise(a: List[Int], b: List[Int]): List[Int] = ???
+  def addPairwise(as: List[Int], bs: List[Int]): List[Int] =
+    reverse(foldLeft(as, (List[Int](), bs), {
+      case ((r, bt), a) => bt match
+        case Cons(bh, btt) => (Cons(a + bh, r), btt)
+        case _ => (r, List[Int]())
+    })._1)
 
   // def zipWith - TODO determine signature
 
