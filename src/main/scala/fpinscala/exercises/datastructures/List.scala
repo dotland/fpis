@@ -1,6 +1,7 @@
 package fpinscala.exercises.datastructures
 
 import scala.annotation.{newMain, tailrec}
+import scala.collection.mutable.ListBuffer
 
 /** `List` data type, parameterized on a type, `A`. */
 enum List[+A]:
@@ -139,7 +140,17 @@ object List: // `List` companion object. Contains functions for creating and wor
   def map[A,B](l: List[A], f: A => B): List[B] =
     foldRightViaLeft(l, List[B](), (a, bs) => Cons(f(a), bs))
 
-  def filter[A](as: List[A], f: A => Boolean): List[A] = ???
+  def filter[A](as: List[A], f: A => Boolean): List[A] =
+    val buf = new ListBuffer[A]
+    @tailrec
+    def go(as: List[A]): Unit = as match
+      case Nil => ()
+      case Cons(h, t) => 
+        if f(h) then buf += h
+        go(t)
+        
+    go(as)
+    List(buf.toSeq*)
 
   def flatMap[A,B](as: List[A], f: A => List[B]): List[B] = ???
 
