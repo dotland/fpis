@@ -172,4 +172,23 @@ object List: // `List` companion object. Contains functions for creating and wor
         case _ => (r, List[B]())
     })._1)
 
-  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean =
+    @tailrec
+    def isPrefix(sup: List[A], sub: List[A]): Boolean = sup match
+      case Nil => sub == Nil
+      case Cons(h1, t1) => sub match
+        case Nil => true
+        case Cons(h2, t2) => 
+          if h1 != h2 then false else isPrefix(t1, t2)
+
+    val subLength = lengthViaFoldLeft(sub)
+    
+    @tailrec
+    def go(sup: List[A], sub: List[A]): Boolean =
+      if lengthViaFoldLeft(sup) < subLength then false
+      else if isPrefix(sup, sub) then true
+      else sup match
+        case Nil => sub == Nil
+        case Cons(_, t) => go(t, sub)
+        
+    go(sup, sub)
