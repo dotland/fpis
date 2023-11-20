@@ -130,8 +130,9 @@ object List: // `List` companion object. Contains functions for creating and wor
   def concat[A](l: List[List[A]]): List[A] =
     foldLeft(l, Nil: List[A], append(_, _))
 
-  def incrementEach(l: List[Int]): List[Int] = ???
-
+  def incrementEach(l: List[Int]): List[Int] =
+    foldRight(l, List[Int](), (a, b) => Cons(a + 1, b))
+  
   def doubleToString(l: List[Double]): List[String] = ???
 
   def map[A,B](l: List[A], f: A => B): List[B] = ???
