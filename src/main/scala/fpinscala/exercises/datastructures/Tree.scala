@@ -1,5 +1,7 @@
 package fpinscala.exercises.datastructures
 
+import fpinscala.exercises.datastructures.Tree.Branch
+
 enum Tree[+A]:
   case Leaf(value: A)
   case Branch(left: Tree[A], right: Tree[A])
@@ -12,7 +14,9 @@ enum Tree[+A]:
     case Leaf(_) => 0
     case Branch(l, r) => 1 + (l.depth max r.depth)
 
-  def map[B](f: A => B): Tree[B] = ???
+  def map[B](f: A => B): Tree[B] = this match
+    case Leaf(a) => Leaf(f(a))
+    case Branch(l, r) => Branch(l.map(f), r.map(f))
 
   def fold[B](f: A => B, g: (B,B) => B): B = ???
   
