@@ -26,8 +26,14 @@ object Tree:
     case Leaf(_) => 1
     case Branch(l,r) => 1 + size(l) + size(r)
 
-  extension (t: Tree[Int]) def firstPositive: Int = ???
+  extension (t: Tree[Int]) def firstPositive: Int = t match
+    case Leaf(i) => i
+    case Branch(l, r) =>
+      val lpos = l.firstPositive
+      if lpos > 0 then lpos else r.firstPositive
 
-  extension (t: Tree[Int]) def maximum: Int = ???
+  extension (t: Tree[Int]) def maximum: Int = t match
+    case Leaf(i) => i
+    case Branch(l, r) => l.maximum max r.maximum
 
   extension (t: Tree[Int]) def maximumViaFold: Int = ???
