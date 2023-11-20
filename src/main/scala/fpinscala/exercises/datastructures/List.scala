@@ -152,7 +152,8 @@ object List: // `List` companion object. Contains functions for creating and wor
     go(as)
     List(buf.toSeq*)
 
-  def flatMap[A,B](as: List[A], f: A => List[B]): List[B] = ???
+  def flatMap[A,B](as: List[A], f: A => List[B]): List[B] =
+    foldRightViaLeft(as, List[B](), (a, bs) => append(f(a), bs))
 
   def filterViaFlatMap[A](as: List[A], f: A => Boolean): List[A] = ???
 
