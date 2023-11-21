@@ -60,4 +60,7 @@ object Option:
       case scala.Some(_) => None
       case _ => Some(as.collect { case Some(a) => a } )
 
-  def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] = ???
+  def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] =
+    as.foldRight[Option[List[B]]](Some(Nil)) { (a, acc) =>
+      map2(f(a), acc)(_ :: _)
+    }
