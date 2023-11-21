@@ -18,10 +18,12 @@ enum Option[+A]:
   def flatMap[B](f: A => Option[B]): Option[B] =
     map(f).getOrElse(None)
 
+  // no overhead and easy to read
   def orElse[B >: A](ob: => Option[B]): Option[B] = this match
     case None => ob
     case _ => this
 
+  // no overhead and easy to read
   def filter(f: A => Boolean): Option[A] = this match
     case Some(a) if f(a) => this
     case _ => None
@@ -46,11 +48,12 @@ object Option:
     else Some(xs.sum / xs.length)
 
   def variance(xs: Seq[Double]): Option[Double] =
-    mean(xs).flatMap { m => 
+    mean(xs).flatMap { m =>
       mean(xs.map(x => math.pow(x - m, 2)))
     }
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = ???
+  def map2[A,B,C](oa: Option[A], ob: Option[B])(f: (A, B) => C): Option[C] =
+    oa.flatMap(a => ob.map(b => f(a, b)))
 
   def sequence[A](as: List[Option[A]]): Option[List[A]] = ???
 
