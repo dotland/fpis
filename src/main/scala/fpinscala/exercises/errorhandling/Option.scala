@@ -20,10 +20,10 @@ enum Option[+A]:
 
   def orElse[B >: A](ob: => Option[B]): Option[B] = this match
     case None => ob
-    case s => s
+    case _ => this
 
   def filter(f: A => Boolean): Option[A] = this match
-    case Some(a) if f(a) => Some(a)
+    case Some(a) if f(a) => this
     case _ => None
 
 object Option:
@@ -45,7 +45,10 @@ object Option:
     if xs.isEmpty then None
     else Some(xs.sum / xs.length)
 
-  def variance(xs: Seq[Double]): Option[Double] = ???
+  def variance(xs: Seq[Double]): Option[Double] =
+    mean(xs).flatMap { m => 
+      mean(xs.map(x => math.pow(x - m, 2)))
+    }
 
   def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = ???
 
