@@ -57,10 +57,9 @@ object Option:
 
   def sequence[A](as: List[Option[A]]): Option[List[A]] =
     as.find(_ eq None) match
-      case scala.Some(_) => None
-      case _ => Some(as.collect { case Some(a) => a } )
+      case scala.None => Some(as.collect { case Some(a) => a } )
+      case _ => None
 
   def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] =
-    as.foldRight[Option[List[B]]](Some(Nil)) { (a, acc) =>
+    as.foldRight[Option[List[B]]](Some(Nil)): (a, acc) =>
       map2(f(a), acc)(_ :: _)
-    }
