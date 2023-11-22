@@ -8,6 +8,10 @@ enum Either[+E,+A]:
   case Left(get: E)
   case Right(get: A)
 
+  def isLeft: Boolean = this match
+    case Left(_) => true
+    case Right(_) => false
+
   def map[B](f: A => B): Either[E, B] = this match
     case Right(a) => Right(f(a))
     case _ => this.asInstanceOf[Either[E, B]]
@@ -24,9 +28,14 @@ enum Either[+E,+A]:
     flatMap(a => eb.map(b => f(a, b)))
 
 object Either:
-  def traverse[E,A,B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] = ???
+  def traverse[E, A, B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
+    es.foldRight[Either[E, List[B]]](Right(Nil)): (a, acc) =>
+      f(a).map2(acc)(_ :: _)
 
-  def sequence[E,A](es: List[Either[E,A]]): Either[E,List[A]] = ???
+  def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =
+    es.find(_.isLeft) match
+      case scala.None => Right(es.collect { case Right(a) => a} )
+      case scala.Some(e) => e.asInstanceOf[Either[E, List[A]]]
 
   def mean(xs: IndexedSeq[Double]): Either[String, Double] = 
     if xs.isEmpty then
