@@ -34,8 +34,8 @@ object Either:
 
   def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =
     es.find(_.isLeft) match
-      case scala.None => Right(es.collect { case Right(a) => a} )
-      case scala.Some(e) => e.asInstanceOf[Either[E, List[A]]]
+      case None => Right(es.collect { case Right(a) => a} )
+      case Some(e) => e.asInstanceOf[Either[E, List[A]]]
 
   def mean(xs: IndexedSeq[Double]): Either[String, Double] = 
     if xs.isEmpty then
