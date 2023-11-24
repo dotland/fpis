@@ -26,14 +26,18 @@ enum LazyList[+A]:
       case Cons(h, t) => LazyList.cons(h(), t().take(n - 1))
       case Empty => LazyList.empty
 
-  def drop(n: Int): LazyList[A] =
+  @annotation.tailrec
+  final def drop(n: Int): LazyList[A] =
     if n <= 0 then this else this match
       case Cons(_, t) => t().drop(n - 1)
       case Empty => LazyList.empty
 
-  def takeWhile(p: A => Boolean): LazyList[A] = ???
+  def takeWhile(p: A => Boolean): LazyList[A] = this match
+    case Cons(h, t) if p(h()) => LazyList.cons(h(), t().takeWhile(p))
+    case _ => LazyList.empty
 
-  def forAll(p: A => Boolean): Boolean = ???
+  def forAll(p: A => Boolean): Boolean =
+    foldRight(true)((a, b) => p(a) && b)
 
   def headOption: Option[A] = this match
     case Empty => None
