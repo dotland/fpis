@@ -38,7 +38,7 @@ enum LazyList[+A]:
     case Cons(h, t) if p(h()) => cons(h(), t().takeWhile(p))
     case _ => empty
 
-  def takeWhileFold(p: A => Boolean): LazyList[A] =
+  def takeWhileViaFold(p: A => Boolean): LazyList[A] =
     foldRight(LazyList.empty[A]): (a, b) =>
       if p(a) then cons(a, b) else empty
 
@@ -48,6 +48,9 @@ enum LazyList[+A]:
   def headOption: Option[A] = this match
     case Empty => None
     case Cons(h, _) => Some(h())
+    
+  def headOptionViaFold: Option[A] =
+    foldRight(None: Option[A]) { (a, _) => Some(a) }
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
