@@ -1,5 +1,7 @@
 package fpinscala.exercises.laziness
 
+import fpinscala.exercises.laziness.LazyList.{cons, empty}
+
 enum LazyList[+A]:
   case Empty
   case Cons(h: () => A, t: () => LazyList[A])
@@ -21,20 +23,24 @@ enum LazyList[+A]:
     case Empty => None
     case Cons(h, t) => if (f(h())) Some(h()) else t().find(f)
 
-  def take(n: Int): LazyList[A] = 
-    if n <= 0 then LazyList.empty else this match 
-      case Cons(h, t) => LazyList.cons(h(), t().take(n - 1))
-      case Empty => LazyList.empty
+  def take(n: Int): LazyList[A] =
+    if n <= 0 then empty else this match
+      case Cons(h, t) => cons(h(), t().take(n - 1))
+      case Empty => empty
 
   @annotation.tailrec
   final def drop(n: Int): LazyList[A] =
     if n <= 0 then this else this match
       case Cons(_, t) => t().drop(n - 1)
-      case Empty => LazyList.empty
+      case Empty => empty
 
   def takeWhile(p: A => Boolean): LazyList[A] = this match
-    case Cons(h, t) if p(h()) => LazyList.cons(h(), t().takeWhile(p))
-    case _ => LazyList.empty
+    case Cons(h, t) if p(h()) => cons(h(), t().takeWhile(p))
+    case _ => empty
+
+  def takeWhileFold(p: A => Boolean): LazyList[A] =
+    foldRight(LazyList.empty[A]): (a, b) =>
+      if p(a) then cons(a, b) else empty
 
   def forAll(p: A => Boolean): Boolean =
     foldRight(true)((a, b) => p(a) && b)
