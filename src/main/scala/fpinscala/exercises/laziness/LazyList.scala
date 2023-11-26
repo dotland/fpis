@@ -52,17 +52,17 @@ enum LazyList[+A]:
   def headOption1: Option[A] =
     foldRight(None: Option[A]) { (a, _) => Some(a) }
 
-  def map[B >: A](f: A => B): LazyList[B] =
+  def map[B](f: A => B): LazyList[B] =
     foldRight(Empty: LazyList[B]) { (a, acc) => cons(f(a), acc) }
 
   def filter(p: A => Boolean): LazyList[A] =
     foldRight(LazyList.empty[A]): (a, acc) =>
       if p(a) then cons(a, acc) else acc
 
-  def append[B >: A](ls: LazyList[B]): LazyList[B] =
+  def append[B >: A](ls: => LazyList[B]): LazyList[B] =
     foldRight(ls) { (a, bs) => cons(a, bs) }
     
-  def flatMap[B >: A](f: A => LazyList[B]): LazyList[B] =
+  def flatMap[B](f: A => LazyList[B]): LazyList[B] =
     foldRight(LazyList.empty[B]) { (a, bs) => f(a).append(bs) }
 
   def startsWith[B](s: LazyList[B]): Boolean = ???
