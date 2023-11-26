@@ -1,6 +1,6 @@
 package fpinscala.exercises.laziness
 
-import fpinscala.exercises.laziness.LazyList.{cons, empty}
+import fpinscala.exercises.laziness.LazyList.{cons, empty, unfold}
 
 enum LazyList[+A]:
   case Empty
@@ -72,6 +72,33 @@ enum LazyList[+A]:
   def tail: LazyList[A] = this match
     case Cons(_, t) => t()
     case _ => throw new UnsupportedOperationException("tail on empty list")
+    
+  def mapViaUnfold[B](f: A => B): LazyList[B] =
+    unfold(this): 
+      case Cons(h, t) => Some(f(h()), t())
+      case Empty => None
+      
+  def takeViaUnfold(n: Int): LazyList[A] =
+    unfold((this, n)):
+      case (Cons(h, t), n) if n > 0 => Some(h(), (t(), n - 1))
+      case _ => None
+      
+  def takeWhileViaUnfold(p: A => Boolean): LazyList[A] =
+    unfold(this):
+      case Cons(h, t) if p(h()) => Some(h(), t())
+      case _ => None
+      
+  def zipWith[B, C](that: LazyList[B])(f: (A, B) => C): LazyList[C] =
+    unfold((this, that)):
+      case (Cons(h1, t1), Cons(h2, t2)) => Some(f(h1(), h2()), (t1(), t2()))
+      case _ => None
+
+  def zipAll[B](that: LazyList[B]): LazyList[(Option[A], Option[B])] =
+    unfold((this, that)):
+      case (Cons(h1, t1), Cons(h2, t2)) => Some((Some(h1()), Some(h2())), (t1(), t2()))
+      case (Cons(h1, t1), e) => Some((Some(h1()), None), (t1(), e))
+      case (e, Cons(h2, t2)) => Some((None, Some(h2())), (e, t2()))
+      case _ => None
 
   def startsWith[B](s: LazyList[B]): Boolean = ???
 
