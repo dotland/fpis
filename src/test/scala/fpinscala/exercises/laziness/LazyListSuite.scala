@@ -144,8 +144,6 @@ class LazyListSuite extends PropSuite:
     case list1 ** list2 =>
       assertEquals(list1.hasSubsequence(list2), list1.toList.containsSlice(list2.toList))
 
-/*
   test("LazyList.scanRight")(genLazyList): lazyList =>
     assertEquals(lazyList.scanRight(0)(_ + _).toList, lazyList.tails.map(_.toList.sum).toList)
     assertEquals(lazyList.scanRight(1)(_ * _).toList, lazyList.tails.map(_.toList.product).toList)
- */

@@ -103,7 +103,7 @@ enum LazyList[+A]:
       case _ => None
 
   def hasSubsequence[B >: A](that: LazyList[B]): Boolean =
-    tails.exists(_.startsWith(that))  
+    tails.exists(_.startsWith(that))
 
   def startsWith[B >: A](that: LazyList[B]): Boolean =
     @tailrec
@@ -119,6 +119,13 @@ enum LazyList[+A]:
       case Cons(_, t) => Some(t(), t())
       case _ => None
     })
+
+  def scanRight[B](z: => B)(f: (A, => B) => B): LazyList[B] =
+    foldRight((LazyList(z), z)) { case (a, (res, b)) =>
+      val ab = f(a, b)
+      (cons(ab, res), ab)
+    }(0)
+
 
 object LazyList:
   def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] = 
