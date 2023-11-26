@@ -65,6 +65,14 @@ enum LazyList[+A]:
   def flatMap[B](f: A => LazyList[B]): LazyList[B] =
     foldRight(LazyList.empty[B]) { (a, bs) => f(a).append(bs) }
 
+  def zip[B](that: => LazyList[B]): LazyList[(A, B)] = (this, that) match
+    case (Cons(h1, t1), Cons(h2, t2)) => cons((h1(), h2()), t1().zip(t2()))
+    case _ => empty
+    
+  def tail: LazyList[A] = this match
+    case Cons(_, t) => t()
+    case _ => throw new UnsupportedOperationException("tail on empty list")
+
   def startsWith[B](s: LazyList[B]): Boolean = ???
 
 
@@ -86,7 +94,8 @@ object LazyList:
 
   def from(n: Int): LazyList[Int] = cons(n, from(n + 1))
 
-  lazy val fibs: LazyList[Int] = ???
+  lazy val fibs: LazyList[Int] = 
+    cons(0, cons(1, fibs.zip(fibs.tail).map(_ + _)))
 
   def unfold[A, S](state: S)(f: S => Option[(A, S)]): LazyList[A] = ???
 
