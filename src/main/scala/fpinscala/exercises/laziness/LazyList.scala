@@ -84,7 +84,7 @@ object LazyList:
 
   def continually[A](a: A): LazyList[A] = cons(a, continually(a))
 
-  def from(n: Int): LazyList[Int] = ???
+  def from(n: Int): LazyList[Int] = cons(n, from(n + 1))
 
   lazy val fibs: LazyList[Int] = ???
 
