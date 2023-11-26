@@ -2,6 +2,8 @@ package fpinscala.exercises.laziness
 
 import fpinscala.exercises.laziness.LazyList.{cons, empty, unfold}
 
+import scala.annotation.tailrec
+
 enum LazyList[+A]:
   case Empty
   case Cons(h: () => A, t: () => LazyList[A])
@@ -68,26 +70,26 @@ enum LazyList[+A]:
   def zip[B](that: => LazyList[B]): LazyList[(A, B)] = (this, that) match
     case (Cons(h1, t1), Cons(h2, t2)) => cons((h1(), h2()), t1().zip(t2()))
     case _ => empty
-    
+
   def tail: LazyList[A] = this match
     case Cons(_, t) => t()
     case _ => throw new UnsupportedOperationException("tail on empty list")
-    
+
   def mapViaUnfold[B](f: A => B): LazyList[B] =
-    unfold(this): 
+    unfold(this):
       case Cons(h, t) => Some(f(h()), t())
       case Empty => None
-      
+
   def takeViaUnfold(n: Int): LazyList[A] =
     unfold((this, n)):
       case (Cons(h, t), n) if n > 0 => Some(h(), (t(), n - 1))
       case _ => None
-      
+
   def takeWhileViaUnfold(p: A => Boolean): LazyList[A] =
     unfold(this):
       case Cons(h, t) if p(h()) => Some(h(), t())
       case _ => None
-      
+
   def zipWith[B, C](that: LazyList[B])(f: (A, B) => C): LazyList[C] =
     unfold((this, that)):
       case (Cons(h1, t1), Cons(h2, t2)) => Some(f(h1(), h2()), (t1(), t2()))
@@ -99,13 +101,24 @@ enum LazyList[+A]:
       case (Cons(h1, t1), e) => Some((Some(h1()), None), (t1(), e))
       case (e, Cons(h2, t2)) => Some((None, Some(h2())), (e, t2()))
       case _ => None
-      
-  def hasSubsequence[B >: A](that: LazyList[B]): Boolean = ???
-    
-  def startsWith[B >: A](that: LazyList[B]): Boolean = (this, that) match
-    case (Cons(h1, t1), Cons(h2, t2)) if h1() == h2() => t1().startsWith(t2())
-    case (_, Empty) => true
-    case (_, _) => false
+
+  def hasSubsequence[B >: A](that: LazyList[B]): Boolean =
+    tails.exists(_.startsWith(that))  
+
+  def startsWith[B >: A](that: LazyList[B]): Boolean =
+    @tailrec
+    def go(l1: LazyList[B], l2: LazyList[B]): Boolean = (l1, l2) match
+      case (Cons(h1, t1), Cons(h2, t2)) if h1() == h2() => go(t1(), t2())
+      case (_, Empty) => true
+      case (_, _) => false
+
+    go(this, that)
+
+  def tails: LazyList[LazyList[A]] =
+    cons(this, unfold(this) {
+      case Cons(_, t) => Some(t(), t())
+      case _ => None
+    })
 
 object LazyList:
   def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] = 
@@ -125,7 +138,7 @@ object LazyList:
 
   def from(n: Int): LazyList[Int] = cons(n, from(n + 1))
 
-  lazy val fibs: LazyList[Int] = 
+  lazy val fibs: LazyList[Int] =
     cons(0, cons(1, fibs.zip(fibs.tail).map(_ + _)))
 
   def unfold[A, S](state: S)(f: S => Option[(A, S)]): LazyList[A] =

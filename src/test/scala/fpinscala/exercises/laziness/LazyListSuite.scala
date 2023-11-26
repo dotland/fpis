@@ -129,7 +129,6 @@ class LazyListSuite extends PropSuite:
       assert(list1.startsWith(empty))
       assert(list1.startsWith(list1))
 
-/*
   test("LazyList.tails")(genLazyList): lazyList =>
     val list = lazyList.toList
     val expected = (0 to list.length).map(i => list.drop(i)).toList
@@ -145,6 +144,7 @@ class LazyListSuite extends PropSuite:
     case list1 ** list2 =>
       assertEquals(list1.hasSubsequence(list2), list1.toList.containsSlice(list2.toList))
 
+/*
   test("LazyList.scanRight")(genLazyList): lazyList =>
     assertEquals(lazyList.scanRight(0)(_ + _).toList, lazyList.tails.map(_.toList.sum).toList)
     assertEquals(lazyList.scanRight(1)(_ * _).toList, lazyList.tails.map(_.toList.product).toList)
