@@ -99,9 +99,13 @@ enum LazyList[+A]:
       case (Cons(h1, t1), e) => Some((Some(h1()), None), (t1(), e))
       case (e, Cons(h2, t2)) => Some((None, Some(h2())), (e, t2()))
       case _ => None
-
-  def startsWith[B](s: LazyList[B]): Boolean = ???
-
+      
+  def hasSubsequence[B >: A](that: LazyList[B]): Boolean = ???
+    
+  def startsWith[B >: A](that: LazyList[B]): Boolean = (this, that) match
+    case (Cons(h1, t1), Cons(h2, t2)) if h1() == h2() => t1().startsWith(t2())
+    case (_, Empty) => true
+    case (_, _) => false
 
 object LazyList:
   def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] = 
