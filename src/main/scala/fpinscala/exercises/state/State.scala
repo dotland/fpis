@@ -30,7 +30,9 @@ object RNG:
     val (n, rng2) = rng.nextInt
     (if n == Int.MinValue then Int.MaxValue else math.abs(n), rng2)
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) =
+    val (i, r) = nonNegativeInt(rng)
+    (if i == 0 then 0 else (i.toDouble - 1) / Int.MaxValue, r)
 
   def intDouble(rng: RNG): ((Int,Double), RNG) = ???
 
