@@ -50,7 +50,16 @@ object RNG:
     val (d3, r3) = double(r2)
     ((d1, d2, d3), r3)
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) =
+    var lastRng = rng
+    val ls = List.unfold((rng, count)):
+      case (r, c) if c > 0 => 
+        val (i, r2) = r.nextInt
+        lastRng = r2
+        Some(i, (lastRng, c - 1))
+      case _ => None
+
+    (ls, lastRng)
 
   def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
 
