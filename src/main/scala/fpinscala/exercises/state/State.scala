@@ -26,7 +26,9 @@ object RNG:
       val (a, rng2) = s(rng)
       (f(a), rng2)
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  def nonNegativeInt(rng: RNG): (Int, RNG) =
+    val (n, rng2) = rng.nextInt
+    (if n == Int.MinValue then Int.MaxValue else math.abs(n), rng2)
 
   def double(rng: RNG): (Double, RNG) = ???
 
