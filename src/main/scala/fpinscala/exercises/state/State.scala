@@ -1,5 +1,7 @@
 package fpinscala.exercises.state
 
+import fpinscala.exercises.state.RNG.{map2, unit}
+
 
 trait RNG:
   def nextInt: (Int, RNG) // Should generate a random `Int`. We'll later define other functions in terms of `nextInt`.
@@ -82,13 +84,13 @@ object RNG:
     rng =>
       val (a, rng2) = r(rng)
       f(a)(rng2)
-  
+
   def mapViaFlatMap[A, B](r: Rand[A])(f: A => B): Rand[B] =
     flatMap(r) { a => unit(f(a)) }
 
   def map2ViaFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     flatMap(rb) { b => flatMap(ra) { a => unit(f(a, b)) } }
-    
+
   def nonNegativeLessThan(n: Int): Rand[Int] =
     flatMap(nonNegativeInt): i =>
       val mod = i % n
@@ -101,15 +103,27 @@ object State:
     def run(s: S): (A, S) = underlying(s)
 
     def map[B](f: A => B): State[S, B] =
-      ???
+      s =>
+        val (a, s1) = run(s)
+        (f(a), s1)
 
     def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-      ???
+      s =>
+        val (a, s1) = run(s)
+        val (b, s2) = sb(s1)
+        (f(a, b), s2)
 
     def flatMap[B](f: A => State[S, B]): State[S, B] =
-      ???
+      s =>
+        val (a, s1) = run(s)
+        f(a)(s1)
 
   def apply[S, A](f: S => (A, S)): State[S, A] = f
+
+  def unit[S, A](a: A): State[S, A] =  s => (a, s)
+
+  def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
+    ss.foldRight(unit(List.empty[A])) { (s, acc) => s.map2(acc)(_ :: _) }
 
 enum Input:
   case Coin, Turn
