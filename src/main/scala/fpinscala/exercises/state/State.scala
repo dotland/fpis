@@ -1,5 +1,6 @@
 package fpinscala.exercises.state
 
+import fpinscala.exercises.state.Input.{Coin, Turn}
 import fpinscala.exercises.state.RNG.{map2, unit}
 
 
@@ -125,10 +126,25 @@ object State:
   def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
     ss.foldRight(unit(List.empty[A])) { (s, acc) => s.map2(acc)(_ :: _) }
 
+  def traverse[S, A, B](as: List[A])(f: A => State[S, B]): State[S, List[B]] =
+    as.foldRight(unit[S, List[B]](Nil)) { (a, acc) => f(a).map2(acc)(_ :: _) }
+
+
 enum Input:
   case Coin, Turn
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
 
 object Candy:
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] =
+    State { machine =>
+      val res = inputs.foldLeft(machine) {
+        case (m @ Machine(_, 0, _), _) => m
+        case (Machine(true, candies, coins), Coin) =>
+          Machine(false, candies, coins + 1)
+        case (Machine(false, candies, coins), Turn) =>
+          Machine(true, candies - 1, coins)
+        case (m, _) => m
+      }
+      ((res.coins, res.candies), res)
+    }
