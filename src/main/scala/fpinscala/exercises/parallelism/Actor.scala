@@ -1,8 +1,8 @@
 package fpinscala.exercises.parallelism
 
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
-import java.util.concurrent.{Callable,ExecutorService}
-import annotation.tailrec
+import java.util.concurrent.{Callable, ExecutorService}
+import annotation.{tailrec, targetName}
 
 /*
  * Implementation is taken from `scalaz` library, with only minor changes. See:
@@ -35,26 +35,27 @@ import annotation.tailrec
  * @param executor Execution strategy
  * @tparam A       The type of messages accepted by this actor.
  */
-final class Actor[A](executor: ExecutorService)(handler: A => Unit, onError: Throwable => Unit = throw(_)):
+final class Actor[A](executor: ExecutorService)(handler: A => Unit, onError: Throwable => Unit = throw _):
   self =>
 
   private val tail = new AtomicReference(new Node[A]())
   private val suspended = new AtomicInteger(1)
   private val head = new AtomicReference(tail.get)
 
+  @targetName("submit")
   infix def !(a: A): Unit =
     val n = new Node(a)
     head.getAndSet(n).lazySet(n)
     trySchedule()
 
   def contramap[B](f: B => A): Actor[B] =
-    new Actor[B](executor)((b: B) => (this ! f(b)), onError)
+    new Actor[B](executor)((b: B) => this ! f(b), onError)
 
   private def trySchedule(): Unit =
     if suspended.compareAndSet(1, 0) then schedule()
 
   private def schedule(): Unit =
-    executor.submit(new Callable[Unit] { def call = act() })
+    executor.submit(new Callable[Unit] { def call: Unit = act() })
     ()
 
   private def act(): Unit =

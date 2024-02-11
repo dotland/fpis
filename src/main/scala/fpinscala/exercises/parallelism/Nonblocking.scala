@@ -2,49 +2,57 @@ package fpinscala.exercises.parallelism
 
 import java.util.concurrent.{Callable, CountDownLatch, ExecutorService}
 import java.util.concurrent.atomic.AtomicReference
+import scala.util.control.NonFatal
 
 object Nonblocking:
 
-  opaque type Future[+A] = (A => Unit) => Unit
+  opaque type Future[+A] = (A => Unit, Throwable => Unit) => Unit
 
   opaque type Par[+A] = ExecutorService => Future[A]
 
   object Par:
 
     def unit[A](a: A): Par[A] =
-      es => cb => cb(a)
+      es => (cb, _) => cb(a)
 
     /** A non-strict version of `unit` */
     def delay[A](a: => A): Par[A] =
-      es => cb => cb(a)
+      es => (cb, onError) => try { cb(a) } catch case NonFatal(t) => onError(t)
 
     def fork[A](a: => Par[A]): Par[A] =
-      es => cb => eval(es)(a(es)(cb))
+      es => (cb, onError) => eval(es)(a(es)(cb, onError))
 
     /**
      * Helper function for constructing `Par` values out of calls to non-blocking continuation-passing-style APIs.
      * This will come in handy in Chapter 13.
      */
     def async[A](f: (A => Unit) => Unit): Par[A] = 
-      es => cb => f(cb)
+      es => (cb, onError) => try { f(cb) } catch case NonFatal(t) => onError(t)
 
     /**
      * Helper function, for evaluating an action
      * asynchronously, using the given `ExecutorService`.
      */
     def eval(es: ExecutorService)(r: => Unit): Unit =
-      es.submit(new Callable[Unit] { def call = r })
+      es.submit(new Callable[Unit] { def call: Unit = r })
 
     extension [A](p: Par[A])
       def run(es: ExecutorService): A =
-        val ref = new AtomicReference[A] // A mutable, threadsafe reference, to use for storing the result
-        val latch = new CountDownLatch(1) // A latch which, when decremented, implies that `ref` has the result
-        p(es) { a => ref.set(a); latch.countDown } // Asynchronously set the result, and decrement the latch
-        latch.await // Block until the `latch.countDown` is invoked asynchronously
-        ref.get // Once we've passed the latch, we know `ref` has been set, and return its value
+        val refA = new AtomicReference[A] // A mutable, threadsafe reference, to use for storing the result
+        val refT = new AtomicReference[Throwable] // A mutable, threadsafe reference, to use for storing any error
+        val latch = new CountDownLatch(1) // A latch which, when decremented, implies that `refA` has the result
+        p(es) ( a => { 
+          refA.set(a); latch.countDown() 
+        }, t => {
+          refT.set(t); latch.countDown()
+        }) // Asynchronously set the result, and decrement the latch
+        latch.await() // Block until the `latch.countDown` is invoked asynchronously
+        val t = refT.get()
+        if (t != null) throw t
+        refA.get // Once we've passed the latch, we know `ref` has been set, and return its value
 
       def map2[B, C](p2: Par[B])(f: (A, B) => C): Par[C] =
-        es => cb =>
+        es => (cb, onError) =>
           var ar: Option[A] = None
           var br: Option[B] = None
           // this implementation is a little too liberal in forking of threads -
@@ -52,19 +60,19 @@ object Nonblocking:
           // forks evaluation of the callback `cb`
           val combiner = Actor[Either[A,B]](es):
             case Left(a) =>
-              if br.isDefined then eval(es)(cb(f(a, br.get)))
+              if br.isDefined then eval(es)(cb(f(a, br.get)), onError)
               else ar = Some(a)
             case Right(b) =>
-              if ar.isDefined then eval(es)(cb(f(ar.get, b)))
+              if ar.isDefined then eval(es)(cb(f(ar.get, b)), onError)
               else br = Some(b)
-          p(es)(a => combiner ! Left(a))
-          p2(es)(b => combiner ! Right(b))
+          p(es)(a => { combiner ! Left(a) }, onError)
+          p2(es)(b => { combiner ! Right(b) }, onError)
 
       def map[B](f: A => B): Par[B] =
-        es => cb => p(es)(a => eval(es)(cb(f(a))))
+        es => (cb, onError) => p(es)(a => eval(es)(cb(f(a)), onError), onError)
 
       def flatMap[B](f: A => Par[B]): Par[B] =
-        es => cb => p(es)(a => f(a)(es)(cb))
+        es => (cb, onError) => p(es)(a => f(a)(es)(cb, onError), onError)
 
       def zip[B](b: Par[B]): Par[(A,B)] = map2(b)((_,_))
 
@@ -112,9 +120,11 @@ object Nonblocking:
      * about `t(es)`? What about `t(es)(cb)`?
      */
     def choice[A](p: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
-      es => cb => p(es): b =>
-        if b then eval(es)(t(es)(cb))
-        else eval(es)(f(es)(cb))
+      es => (cb, onError) => p(es)(b =>
+        if b then eval(es)(t(es)(cb, onError))
+        else eval(es)(f(es)(cb, onError)),
+        onError(_)
+      )
 
     /* The code here is very similar. */
     def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] =
