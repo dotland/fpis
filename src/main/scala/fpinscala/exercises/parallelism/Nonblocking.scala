@@ -137,7 +137,12 @@ object Nonblocking:
       choiceN(a.map(if _ then 1 else 0))(List(ifFalse, ifTrue))
 
     def choiceMap[K, V](p: Par[K])(ps: Map[K, Par[V]]): Par[V] =
-      p.flatMap(k => ps.getOrElse(k, throw IllegalArgumentException("No key found")))
+      es => (cb, onError) =>
+        p(es)(k => eval(es) {
+          ps.get(k).fold(onError(new IllegalStateException("Key not found"))) {
+            _(es)(cb, onError)
+          }
+        }, onError)
 
     /* `chooser` is usually called `flatMap` or `bind`. */
     def chooser[A, B](p: Par[A])(f: A => Par[B]): Par[B] =
@@ -149,8 +154,8 @@ object Nonblocking:
     def choiceNViaFlatMap[A](p: Par[Int])(choices: List[Par[A]]): Par[A] =
       chooser(p) { i => choices(i % choices.length) }
 
-    def join[A](p: Par[Par[A]]): Par[A] =
-      ???
+    def join[A](p: Par[Par[A]]): Par[A] = ???
+      
 
     def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
       ???
