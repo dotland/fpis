@@ -69,7 +69,9 @@ object Nonblocking:
           p2(es)(b => { combiner ! Right(b) }, onError)
 
       def map[B](f: A => B): Par[B] =
-        es => (cb, onError) => p(es)(a => eval(es)(cb(f(a)), onError), onError)
+        es => (cb, onError) => p(es)(a => eval(es) {
+          try { cb(f(a)) } catch case NonFatal(t) => onError(t)
+        }, onError)
 
       def flatMap[B](f: A => Par[B]): Par[B] =
         es => (cb, onError) => p(es)(a => f(a)(es)(cb, onError), onError)
@@ -128,13 +130,14 @@ object Nonblocking:
 
     /* The code here is very similar. */
     def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] =
-      ???
+      es => (cb, onError) =>
+        p(es)(i => eval(es)(ps(i % ps.length)(es)(cb, onError)), onError)
 
     def choiceViaChoiceN[A](a: Par[Boolean])(ifTrue: Par[A], ifFalse: Par[A]): Par[A] =
-      ???
+      choiceN(a.map(if _ then 1 else 0))(List(ifFalse, ifTrue))
 
     def choiceMap[K, V](p: Par[K])(ps: Map[K, Par[V]]): Par[V] =
-      ???
+      p.flatMap(k => ps.getOrElse(k, throw IllegalArgumentException("No key found")))
 
     /* `chooser` is usually called `flatMap` or `bind`. */
     def chooser[A, B](p: Par[A])(f: A => Par[B]): Par[B] =

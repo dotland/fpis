@@ -14,16 +14,18 @@ class NonblockingSuite extends PropSuite:
   private val genParBoolean: Gen[Par[Boolean]] = Gen.boolean.map(Par.unit)
   private val genParInt: Gen[Par[Int]] = genShortNumber.map(Par.unit)
   private val genParString: Gen[Par[String]] = genString.map(Par.unit)
-  private val genParParString: Gen[Par[Par[String]]] = genString.map(str => Par.unit(Par.unit(str)))
+  private val genParParString: Gen[Par[Par[String]]] = 
+    genString.map(str => Par.unit(Par.unit(str)))
   private val genListOfParString: Gen[List[Par[String]]] =
     genNonEmptyList[Par[String]](genParString)
-  private val genMap: Gen[Map[Int, Par[String]]] =
-    Gen.listOfN(20, genParString).map(list => list.toIndexedSeq.indices.map(i => i -> list(i)).toMap)
+  private val genMap: Gen[Map[Int, Par[String]]] = Gen.listOfN(20, genParString)
+    .map(list => list.toIndexedSeq.indices.map(i => i -> list(i)).toMap)
 
   test("Nonblocking.choice")(genParInt ** genParInt ** genParBoolean):
     case t ** f ** p =>
       checkChoice(t, f, p)(Par.choice[Int](p)(t, f))
 
+  // TODO: pass but not finish, back in chapter 13
   test("Nonblocking.choiceN")(genParInt ** genListOfParString):
     case p ** ps =>
       checkChoiceN(p, ps)(Par.choiceN[String](p)(ps))
