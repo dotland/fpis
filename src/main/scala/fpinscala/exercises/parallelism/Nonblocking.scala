@@ -141,13 +141,13 @@ object Nonblocking:
 
     /* `chooser` is usually called `flatMap` or `bind`. */
     def chooser[A, B](p: Par[A])(f: A => Par[B]): Par[B] =
-      ???
+      es => (cb, onError) => p(es)(a => eval(es)(f(a)(es)(cb, onError)), onError)
 
     def choiceViaFlatMap[A](p: Par[Boolean])(f: Par[A], t: Par[A]): Par[A] =
-      ???
+      chooser(p) { if _ then t else f }
 
     def choiceNViaFlatMap[A](p: Par[Int])(choices: List[Par[A]]): Par[A] =
-      ???
+      chooser(p) { i => choices(i % choices.length) }
 
     def join[A](p: Par[Par[A]]): Par[A] =
       ???
