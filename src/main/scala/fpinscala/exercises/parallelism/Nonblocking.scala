@@ -68,13 +68,14 @@ object Nonblocking:
           p(es)(a => { combiner ! Left(a) }, onError)
           p2(es)(b => { combiner ! Right(b) }, onError)
 
-      def map[B](f: A => B): Par[B] =
-        es => (cb, onError) => p(es)(a => eval(es) {
-          try { cb(f(a)) } catch case NonFatal(t) => onError(t)
-        }, onError)
+      def map[B](f: A => B): Par[B] = es => 
+        (cb, onError) => p(es)(a => 
+          eval(es) { try { cb(f(a)) } catch case NonFatal(t) => onError(t)}, 
+          onError
+        )
 
-      def flatMap[B](f: A => Par[B]): Par[B] =
-        es => (cb, onError) => p(es)(a => f(a)(es)(cb, onError), onError)
+      def flatMap[B](f: A => Par[B]): Par[B] = es => 
+        (cb, onError) => p(es)(a => f(a)(es)(cb, onError), onError)
 
       def zip[B](b: Par[B]): Par[(A,B)] = map2(b)((_,_))
 
@@ -121,23 +122,23 @@ object Nonblocking:
      * through the implementation. What is the type of `p(es)`? What
      * about `t(es)`? What about `t(es)(cb)`?
      */
-    def choice[A](p: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
-      es => (cb, onError) => p(es)(b =>
-        if b then eval(es)(t(es)(cb, onError))
-        else eval(es)(f(es)(cb, onError)),
-        onError(_)
-      )
+    def choice[A](p: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] = es => 
+      (cb, onError) => 
+        p(es) ( b =>
+          if b then eval(es)(t(es)(cb, onError)) else eval(es)(f(es)(cb, onError)),
+          onError
+        )
 
     /* The code here is very similar. */
-    def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] =
-      es => (cb, onError) =>
+    def choiceN[A](p: Par[Int])(ps: List[Par[A]]): Par[A] = es => 
+      (cb, onError) =>
         p(es)(i => eval(es)(ps(i % ps.length)(es)(cb, onError)), onError)
 
     def choiceViaChoiceN[A](a: Par[Boolean])(ifTrue: Par[A], ifFalse: Par[A]): Par[A] =
       choiceN(a.map(if _ then 1 else 0))(List(ifFalse, ifTrue))
 
-    def choiceMap[K, V](p: Par[K])(ps: Map[K, Par[V]]): Par[V] =
-      es => (cb, onError) =>
+    def choiceMap[K, V](p: Par[K])(ps: Map[K, Par[V]]): Par[V] = es => 
+      (cb, onError) =>
         p(es)(k => eval(es) {
           ps.get(k).fold(onError(new IllegalStateException("Key not found"))) {
             _(es)(cb, onError)
@@ -145,8 +146,8 @@ object Nonblocking:
         }, onError)
 
     /* `chooser` is usually called `flatMap` or `bind`. */
-    def chooser[A, B](p: Par[A])(f: A => Par[B]): Par[B] =
-      es => (cb, onError) => p(es)(a => eval(es)(f(a)(es)(cb, onError)), onError)
+    def chooser[A, B](p: Par[A])(f: A => Par[B]): Par[B] = es => 
+      (cb, onError) => p(es)(a => eval(es)(f(a)(es)(cb, onError)), onError)
 
     def choiceViaFlatMap[A](p: Par[Boolean])(f: Par[A], t: Par[A]): Par[A] =
       chooser(p) { if _ then t else f }
@@ -154,11 +155,9 @@ object Nonblocking:
     def choiceNViaFlatMap[A](p: Par[Int])(choices: List[Par[A]]): Par[A] =
       chooser(p) { i => choices(i % choices.length) }
 
-    def join[A](p: Par[Par[A]]): Par[A] = ???
-      
+    def join[A](p: Par[Par[A]]): Par[A] = es =>
+      (cb, onError) => p(es)(_(es)(cb, onError), onError)
 
-    def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
-      ???
+    def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] = a.flatMap(identity)
 
-    def flatMapViaJoin[A,B](p: Par[A])(f: A => Par[B]): Par[B] =
-      ???
+    def flatMapViaJoin[A,B](p: Par[A])(f: A => Par[B]): Par[B] = join(p.map(f))
