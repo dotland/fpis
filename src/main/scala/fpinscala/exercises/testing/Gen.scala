@@ -12,8 +12,11 @@ The library developed in this chapter goes through several iterations. This file
 shell, which you can fill in and modify while working through the chapter.
 */
 
-trait Prop
-
+trait Prop: 
+  outer =>
+  def check: Boolean
+  def &&(that: Prop): Prop = new Prop:
+    override def check: Boolean = outer.check && that.check
 
 object Prop:
   def forAll[A](gen: Gen[A])(f: A => Boolean): Prop = ???
