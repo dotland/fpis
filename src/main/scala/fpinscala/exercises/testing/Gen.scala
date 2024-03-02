@@ -43,13 +43,19 @@ object Gen:
     State(RNG.nonNegativeInt).map(i => start + i % (stopExclusive - start))
 
   extension [A](self: Gen[A])
-    def flatMap[B](f: A => Gen[B]): Gen[B] = ???
+    def flatMap[B](f: A => Gen[B]): Gen[B] = State { rng =>
+      val (a, rng2) = self.next(rng)
+      f(a).next(rng2)
+    }
 
     // We should use a different method name to avoid looping (not 'run')
     def next(rng: RNG): (A, RNG) = self.run(rng)
 
     def listOfN(n: Int): Gen[List[A]] =
       State.sequence(List.fill(n)(self))
+
+    def listOfN(sizeGen: Gen[Int]): Gen[List[A]] =
+      sizeGen.flatMap(listOfN)
 
 /*
 trait Gen[A]:
