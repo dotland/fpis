@@ -68,15 +68,15 @@ object Gen:
       val (unionList, _) = genUnionList.next(rng)
       assert(unionList.count(_ == n) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
       assert(unionList.count(_ == m) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
+  
+  test("Exercise 8.8")(ExhGen.int ** ExhGen.int ** genRNG):
+    case n ** m ** rng =>
+      val genUnion0 = Gen.weighted((Gen.unit(n), 0.0), (Gen.unit(m), 1.0))
+      val (unionList0, _) = genUnion0.listOfN(shortSample).next(rng)
+      assertEquals(unionList0.count(_ == n), 0, "g1 weights 0")
+      assertEquals(unionList0.count(_ == m), shortSample, "g1 weights 0")
 
 /*
-
-test("Exercise 8.8")(ExhGen.int ** ExhGen.int ** genRNG):
-case n ** m ** rng =>
-val genUnion0 = Gen.weighted((Gen.unit(n), 0.0), (Gen.unit(m), 1.0))
-val (unionList0, _) = genUnion0.listOfN(shortSample).next(rng)
-assertEquals(unionList0.count(_ == n), 0, "g1 weights 0")
-assertEquals(unionList0.count(_ == m), shortSample, "g1 weights 0")
 
 val genUnion1 = Gen.weighted((Gen.unit(n), 1.0), (Gen.unit(m), 0.0))
 val (unionList1, _) = genUnion1.listOfN(shortSample).next(rng)

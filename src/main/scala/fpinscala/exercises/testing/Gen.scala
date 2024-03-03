@@ -41,9 +41,14 @@ object Gen:
   def choose(start: Int, stopExclusive: Int): Gen[Int] =
 //    State(RNG.nonNegativeLessThan(stopExclusive - start)).map(i => start + i) // SO Exception
     State(RNG.nonNegativeInt).map(i => start + i % (stopExclusive - start))
-    
+
   def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] =
     boolean.flatMap(b => if b then g1 else g2)
+
+  def weighted[A](g1: (Gen[A], Double), g2: (Gen[A], Double)): Gen[A] =
+    State(RNG.double).flatMap { d =>
+      if d < g1._2 then g1._1 else g2._1
+    }
 
   extension [A](self: Gen[A])
     def flatMap[B](f: A => Gen[B]): Gen[B] = State { rng =>
