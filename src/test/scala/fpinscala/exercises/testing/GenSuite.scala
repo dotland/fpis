@@ -61,15 +61,15 @@ object Gen:
       val (randomBooleanList, _) = Gen.boolean.listOfN(Gen.unit(n)).next(rng)
       assertEquals(randomBooleanList.length, n)
 
-/*
+  test("Exercise 8.7")(ExhGen.int ** ExhGen.int ** genRNG):
+    case n ** m ** rng =>
+      val genUnion = Gen.union(Gen.unit(n), Gen.unit(m))
+      val genUnionList = genUnion.listOfN(shortSample)
+      val (unionList, _) = genUnionList.next(rng)
+      assert(unionList.count(_ == n) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
+      assert(unionList.count(_ == m) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
 
-test("Exercise 8.7")(ExhGen.int ** ExhGen.int ** genRNG):
-case n ** m ** rng =>
-val genUnion = Gen.union(Gen.unit(n), Gen.unit(m))
-val genUnionList = genUnion.listOfN(shortSample)
-val (unionList, _) = genUnionList.next(rng)
-assert(unionList.count(_ == n) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
-assert(unionList.count(_ == m) >= shortSample / 3, "Values should be extracted with approximately equal likelihood")
+/*
 
 test("Exercise 8.8")(ExhGen.int ** ExhGen.int ** genRNG):
 case n ** m ** rng =>
