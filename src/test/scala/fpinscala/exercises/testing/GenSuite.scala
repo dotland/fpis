@@ -106,7 +106,6 @@ object Prop:
 */
 
 // Prop tests
-/*
   import fpinscala.exercises.testing.Prop.Result.*
 
   private val propPassed = Prop((n, rng) => Passed)
@@ -123,7 +122,6 @@ object Prop:
     assertEquals((propPassed || propFalsified).check(), Passed)
     assertEquals((propFalsified || propPassed).check(), Passed)
     assert((propFalsified || propFalsified).check().isFalsified)
-*/
 
 
 // SGen tests: Before using these tests (starting from Exercise 8.10),
