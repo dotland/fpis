@@ -76,23 +76,20 @@ object Gen:
       assertEquals(unionList0.count(_ == n), 0, "g1 weights 0")
       assertEquals(unionList0.count(_ == m), shortSample, "g1 weights 0")
 
-/*
+      val genUnion1 = Gen.weighted((Gen.unit(n), 1.0), (Gen.unit(m), 0.0))
+      val (unionList1, _) = genUnion1.listOfN(shortSample).next(rng)
+      assertEquals(unionList1.count(_ == n), shortSample, "g2 weights 0")
+      assertEquals(unionList1.count(_ == m), 0, "g2 weights 0")
 
-val genUnion1 = Gen.weighted((Gen.unit(n), 1.0), (Gen.unit(m), 0.0))
-val (unionList1, _) = genUnion1.listOfN(shortSample).next(rng)
-assertEquals(unionList1.count(_ == n), shortSample, "g2 weights 0")
-assertEquals(unionList1.count(_ == m), 0, "g2 weights 0")
+      val genUnion2 = Gen.weighted((Gen.unit(n), 0.5), (Gen.unit(m), 0.5))
+      val (unionList2, _) = genUnion2.listOfN(shortSample).next(rng)
+      assert(unionList2.count(_ == n) >= shortSample / 3, "g1 and g2 have the same weight")
+      assert(unionList2.count(_ == m) >= shortSample / 3, "g1 and g2 have the same weight")
 
-val genUnion2 = Gen.weighted((Gen.unit(n), 0.5), (Gen.unit(m), 0.5))
-val (unionList2, _) = genUnion2.listOfN(shortSample).next(rng)
-assert(unionList2.count(_ == n) >= shortSample / 3, "g1 and g2 have the same weight")
-assert(unionList2.count(_ == m) >= shortSample / 3, "g1 and g2 have the same weight")
-
-val genUnion3 = Gen.weighted((Gen.unit(n), 0.33), (Gen.unit(m), 0.67))
-val (unionList3, _) = genUnion3.listOfN(shortSample).next(rng)
-assert(unionList3.count(_ == n) >= shortSample / 5, "g2 is twice as common as g1")
-assert(unionList3.count(_ == m) >= shortSample / 2, "g2 is twice as common as g1")
-*/
+      val genUnion3 = Gen.weighted((Gen.unit(n), 0.33), (Gen.unit(m), 0.67))
+      val (unionList3, _) = genUnion3.listOfN(shortSample).next(rng)
+      assert(unionList3.count(_ == n) >= shortSample / 5, "g2 is twice as common as g1")
+      assert(unionList3.count(_ == m) >= shortSample / 2, "g2 is twice as common as g1")
 
 
 // Prop tests: Before using these tests (starting from Exercise 8.9),
