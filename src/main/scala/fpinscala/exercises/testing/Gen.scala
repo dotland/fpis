@@ -119,7 +119,8 @@ object Prop:
 
 
 opaque type Gen[+A] = State[RNG, A]
-  
+opaque type SGen[+A] = Int => Gen[A]
+
 object Gen:
   def unit[A](a: => A): Gen[A] = State.unit(a)
 
@@ -157,13 +158,13 @@ object Gen:
 
     def unsized: SGen[A] = _ => self
 
+    def list: SGen[List[A]] = n => self.listOfN(n)
+
 /*
 trait Gen[A]:
   def map[B](f: A => B): Gen[B] = ???
   def flatMap[B](f: A => Gen[B]): Gen[B] = ???
 */
-
-opaque type SGen[+A] = Int => Gen[A]
 
 object SGen:
   def apply[A](f: Int => Gen[A]): SGen[A] = f
