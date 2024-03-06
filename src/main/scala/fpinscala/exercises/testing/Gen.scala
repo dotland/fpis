@@ -71,6 +71,16 @@ object Prop:
             case e: Exception => Falsified(buildMsg(a, e), i)
       .find(_.isFalsified).getOrElse(Passed)
 
+  @targetName("forAllSized")
+  def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
+    (max, n, rng) =>
+      val casesPerSize = (n.toInt - 1) / max.toInt + 1
+      val props: LazyList[Prop] =
+        LazyList.from(0).take((n.toInt min max.toInt) + 1).map(i => forAll(g(i))(f))
+      val prop: Prop =
+        props.map[Prop](p => (max, n, rng) => p(max, casesPerSize, rng)).toList.reduce(_ && _)
+      prop(max, n, rng)
+
   // String interpolation syntax. A string starting with `s"` can refer to
   // a Scala value `v` as `$v` or `${v}` in the string.
   // This will be expanded to `v.toString` by the Scala compiler.
@@ -145,10 +155,24 @@ object Gen:
     def listOfN(sizeGen: Gen[Int]): Gen[List[A]] =
       sizeGen.flatMap(listOfN)
 
+    def unsized: SGen[A] = _ => self
+
 /*
 trait Gen[A]:
   def map[B](f: A => B): Gen[B] = ???
   def flatMap[B](f: A => Gen[B]): Gen[B] = ???
-
-trait SGen[+A]
 */
+
+opaque type SGen[+A] = Int => Gen[A]
+
+object SGen:
+  def apply[A](f: Int => Gen[A]): SGen[A] = f
+
+  extension [A](self: SGen[A])
+    def apply(n: Int): Gen[A] = self(n)
+
+    def map[B](f: A => B): SGen[B] =
+      n => self(n).map(f)
+
+    def flatMap[B](f: A => SGen[B]): SGen[B] =
+      n => self(n).flatMap(a => f(a)(n))
