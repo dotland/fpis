@@ -78,7 +78,7 @@ object Prop:
       val props: LazyList[Prop] =
         LazyList.from(0).take((n.toInt min max.toInt) + 1).map(i => forAll(g(i))(f))
       val prop: Prop =
-        props.map[Prop](p => (max, n, rng) => p(max, casesPerSize, rng)).toList.reduce(_ && _)
+        props.map[Prop](p => (max, _, rng) => p(max, casesPerSize, rng)).toList.reduce(_ && _)
       prop(max, n, rng)
 
   // String interpolation syntax. A string starting with `s"` can refer to
@@ -93,13 +93,25 @@ object Prop:
     (_, n, rng) => f(n, rng)
 
   extension (self: Prop)
+
     def check(
                maxSize: MaxSize = 100,
                testCases: TestCases = 100,
                rng: RNG = RNG.Simple(System.currentTimeMillis)
              ): Result =
       self(maxSize, testCases, rng)
-      
+  
+    def run(maxSize: MaxSize = 100,
+            testCases: TestCases = 100,
+            rng: RNG = RNG.Simple(System.currentTimeMillis)): Unit =
+      self(maxSize, testCases, rng) match
+        case Falsified(msg, n) =>
+          println(s"! Falsified after $n passed tests:\n $msg")
+        case Passed =>
+          println(s"+ OK, passed $testCases tests.")
+        case Proved =>
+          println(s"+ OK, proved property.")
+          
     def tag(msg: String): Prop = (max, n, rng) =>
       self(max, n, rng) match
         case Falsified(e, c) => Falsified(FailedCase.fromString(s"$msg($e)"), c)
@@ -159,6 +171,8 @@ object Gen:
     def unsized: SGen[A] = _ => self
 
     def list: SGen[List[A]] = n => self.listOfN(n)
+    
+    def nonEmptyList: SGen[List[A]] = n => self.listOfN(n + 1)
 
 /*
 trait Gen[A]:
