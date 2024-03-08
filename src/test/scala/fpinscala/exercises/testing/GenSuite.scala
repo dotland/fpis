@@ -151,7 +151,25 @@ object SGen:
       val (randomBooleanList, _) = Gen.boolean.list(n).next(rng)
       assertEquals(randomBooleanList.length, n)
 
+  private val maxProp: Prop = Prop.forAll(smallInt.list): l =>
+    val max = l.max
+    l.forall(_ <= max)
+
+  private val maxPropNe: Prop = Prop.forAll(smallInt.nonEmptyList): l =>
+    val max = l.max
+    l.forall(_ <= max)
+
   test("Exercise 8.13")(genShortNumber ** genRNG):
     case n ** rng =>
       val (randomNonEmptyList, _) = Gen.boolean.nonEmptyList(n).next(rng)
       assert(randomNonEmptyList.nonEmpty)
+
+  test("Exercise 8.13 maxNe")(ExhGen.unit(())): _ =>
+    assertEquals(maxPropNe.check(), Passed)
+
+  private val sortedProp: Prop = Prop.forAll(smallInt.list): l =>
+    val sl = l.sorted
+    sl.size <= 1 || sl.zip(sl.tail).forall((a, b) => a <= b)
+
+  test("Exercise 8.14")(ExhGen.unit(())): _ =>
+    assertEquals(sortedProp.check(), Passed)

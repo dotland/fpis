@@ -6,6 +6,7 @@ import fpinscala.exercises.parallelism.Par.Par
 import Gen.*
 import Prop.*
 import Prop.Result.{Falsified, Passed, Proved}
+import fpinscala.answers.testing.Prop
 
 import java.util.concurrent.{ExecutorService, Executors}
 import scala.annotation.targetName
@@ -100,7 +101,7 @@ object Prop:
                rng: RNG = RNG.Simple(System.currentTimeMillis)
              ): Result =
       self(maxSize, testCases, rng)
-  
+
     def run(maxSize: MaxSize = 100,
             testCases: TestCases = 100,
             rng: RNG = RNG.Simple(System.currentTimeMillis)): Unit =
@@ -111,7 +112,7 @@ object Prop:
           println(s"+ OK, passed $testCases tests.")
         case Proved =>
           println(s"+ OK, proved property.")
-          
+
     def tag(msg: String): Prop = (max, n, rng) =>
       self(max, n, rng) match
         case Falsified(e, c) => Falsified(FailedCase.fromString(s"$msg($e)"), c)
@@ -171,8 +172,11 @@ object Gen:
     def unsized: SGen[A] = _ => self
 
     def list: SGen[List[A]] = n => self.listOfN(n)
-    
+
     def nonEmptyList: SGen[List[A]] = n => self.listOfN(n + 1)
+
+  val smallInt: Gen[Int] = Gen.choose(-10, 10)
+
 
 /*
 trait Gen[A]:
