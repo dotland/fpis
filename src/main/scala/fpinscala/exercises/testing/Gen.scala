@@ -6,7 +6,9 @@ import fpinscala.exercises.parallelism.Par.Par
 import Gen.*
 import Prop.*
 import Prop.Result.{Falsified, Passed, Proved}
-import fpinscala.answers.testing.Prop
+import fpinscala.answers.state.{RNG, State}
+import fpinscala.answers.testing.{Gen, Prop}
+import fpinscala.answers.testing.Prop.forAll
 
 import java.util.concurrent.{ExecutorService, Executors}
 import scala.annotation.targetName
@@ -155,6 +157,12 @@ object Gen:
     }
 
   extension [A](self: Gen[A])
+    def map[B](f: A => B): Gen[B] =
+      State.map(self)(f)
+
+    def map2[B,C](that: Gen[B])(f: (A, B) => C): Gen[C] =
+      State.map2(self)(that)(f)
+    
     def flatMap[B](f: A => Gen[B]): Gen[B] = State { rng =>
       val (a, rng2) = self.next(rng)
       f(a).next(rng2)
@@ -174,8 +182,16 @@ object Gen:
     def list: SGen[List[A]] = n => self.listOfN(n)
 
     def nonEmptyList: SGen[List[A]] = n => self.listOfN(n + 1)
+    
+    @targetName("product")
+    def **[B](gb: Gen[B]): Gen[(A, B)] =
+      map2(gb)((_, _))
+
+  def apply[A](s: State[RNG, A]): Gen[A] = s
 
   val smallInt: Gen[Int] = Gen.choose(-10, 10)
+  val int: Gen[Int] = Gen(State(RNG.int))
+  val double: Gen[Double] = Gen(State(RNG.double))
 
 
 /*
@@ -195,3 +211,38 @@ object SGen:
 
     def flatMap[B](f: A => SGen[B]): SGen[B] =
       n => self(n).flatMap(a => f(a)(n))
+
+    def **[B](s2: SGen[B]): SGen[(A, B)] =
+      n => Gen.**(apply(n))(s2(n))
+
+
+opaque type Cogen[-A] = (A, RNG) => RNG
+
+object Cogen:
+  def fn[A, B](in: Cogen[A], out: Gen[B]): Gen[A => B] =
+    State[RNG, A => B]: rng =>
+      val (seed, rng2) = rng.nextInt
+      val f = (a: A) => out.run(in(a, rng2))._1
+      (f, rng2)
+
+  def cogenInt: Cogen[Int] = (i, rng) =>
+    val (seed, rng2) = rng.nextInt
+    RNG.Simple(seed.toLong ^ i.toLong)
+
+  // We can now write properties that depend on arbitrary functions
+  def takeWhilePropInt =
+    Prop.forAll(Gen.int.list ** fn(cogenInt, Gen.boolean).unsized) { (ys, f) =>
+      ys.takeWhile(f).forall(f)
+    }
+
+  // And we can further generalize those properties to be parameterized by types which are not relevant
+  def takeWhileProp[A](ga: Gen[A], ca: Cogen[A]) =
+    Prop.forAll(ga.list ** fn(ca, Gen.boolean).unsized) { (ys, f) =>
+      val res = ys.takeWhile(f)
+      res.forall(f) && res.sizeCompare(ys) <= 0
+    }
+
+  def takeWhileDropWhileProp[A](ga: Gen[A], ca: Cogen[A]) =
+    Prop.forAll(ga.list ** fn(ca, Gen.boolean).unsized) { (ys, f) =>
+      ys == ys.takeWhile(f) ++ ys.dropWhile(f)
+    }
