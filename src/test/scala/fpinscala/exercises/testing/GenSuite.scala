@@ -173,3 +173,9 @@ object SGen:
 
   test("Exercise 8.14")(ExhGen.unit(())): _ =>
     assertEquals(sortedProp.check(), Passed)
+
+  private val treeFoldProp: Prop = Prop.forAll(smallInt.nonEmptyTree): t =>
+    t.fold(List(_), _ ++ _) == t.toList
+
+  test("Exercise 8.20")(ExhGen.unit(())): _ =>
+    assertEquals(treeFoldProp.check(), Passed)

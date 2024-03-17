@@ -1,5 +1,7 @@
 package fpinscala.exercises.state
 
+import fpinscala.exercises.datastructures.Tree
+import fpinscala.exercises.datastructures.Tree.{Branch, Leaf}
 import fpinscala.exercises.state.Input.{Coin, Turn}
 import fpinscala.exercises.state.RNG.{map2, unit}
 
@@ -124,11 +126,13 @@ object State:
   def unit[S, A](a: A): State[S, A] =  s => (a, s)
 
   def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
-    ss.foldRight(unit(List.empty[A])) { (s, acc) => s.map2(acc)(_ :: _) }
+    ss.foldRight(unit[S, List[A]](Nil)) { (s, acc) => s.map2(acc)(_ :: _) }
 
   def traverse[S, A, B](as: List[A])(f: A => State[S, B]): State[S, List[B]] =
     as.foldRight(unit[S, List[B]](Nil)) { (a, acc) => f(a).map2(acc)(_ :: _) }
 
+  def sequence[S, A](ss: Tree[State[S, A]]): State[S, Tree[A]] =
+    ss.fold( _.map(Leaf.apply), (s1, s2) => s1.map2(s2)(Branch(_, _)) )
 
 enum Input:
   case Coin, Turn

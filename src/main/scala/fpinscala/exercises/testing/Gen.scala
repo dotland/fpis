@@ -6,9 +6,9 @@ import fpinscala.exercises.parallelism.Par.Par
 import Gen.*
 import Prop.*
 import Prop.Result.{Falsified, Passed, Proved}
-import fpinscala.answers.state.{RNG, State}
 import fpinscala.answers.testing.{Gen, Prop}
 import fpinscala.answers.testing.Prop.forAll
+import fpinscala.exercises.datastructures.Tree
 
 import java.util.concurrent.{ExecutorService, Executors}
 import scala.annotation.targetName
@@ -173,16 +173,26 @@ object Gen:
 
     def listOfN(n: Int): Gen[List[A]] =
       State.sequence(List.fill(n)(self))
+      
+    def treeOfN(n: Int): Gen[Tree[A]] =
+      State.sequence(Tree.fill(n)(self))
 
     def listOfN(sizeGen: Gen[Int]): Gen[List[A]] =
       sizeGen.flatMap(listOfN)
-
-    def unsized: SGen[A] = _ => self
-
+      
+    def treeOfN(sizeGen: Gen[Int]): Gen[Tree[A]] =
+      sizeGen.flatMap(treeOfN)
+      
     def list: SGen[List[A]] = n => self.listOfN(n)
+    
+    def tree: SGen[Tree[A]] = n => self.treeOfN(n)
 
     def nonEmptyList: SGen[List[A]] = n => self.listOfN(n + 1)
     
+    def nonEmptyTree: SGen[Tree[A]] = n => self.treeOfN(n + 1)
+
+    def unsized: SGen[A] = _ => self
+
     @targetName("product")
     def **[B](gb: Gen[B]): Gen[(A, B)] =
       map2(gb)((_, _))
